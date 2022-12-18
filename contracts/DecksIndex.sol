@@ -23,18 +23,26 @@ contract DecksIndex {
     }
 
     function borrow(uint40 deckID) external payable returns(bool) {
-        console.log("msg.value", msg.value, "/", decks[deckID].hrPrice);
+        // console.log("msg.value", msg.value, "/", decks[deckID].hrPrice);
+
+        require(!isAlreadyBorrowed(deckID), "Deck is already borrowed");
 
         DeckProperties memory deck = decks[deckID];
         uint256 price = MICROETH * deck.hrPrice;
-
-        require(msg.value >= price, "Make sure you pay at the correct price ");
-
-        Address.sendValue(payable(deck.owner), msg.value);
+        require(msg.value >= price, "Not enough ETH sent");
 
         deck.borrower = msg.sender;
         deck.expiry = uint32(block.timestamp + 1 hours);
+        
+        Address.sendValue(payable(deck.owner), msg.value);
+        
+        return true;
+    }
 
+    function isAlreadyBorrowed(uint40 deckID) public view returns (bool) {
+        DeckProperties memory deck = decks[deckID];
+        if (deck.borrower == address(0)) return false;
+        if (deck.expiry < block.timestamp) return false;
         return true;
     }
 

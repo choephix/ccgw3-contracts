@@ -1,6 +1,6 @@
 {
 	"compiler": {
-		"version": "0.8.7+commit.e28d00a7"
+		"version": "0.8.6+commit.11564f7e"
 	},
 	"language": "Solidity",
 	"output": {
@@ -157,6 +157,25 @@
 			{
 				"inputs": [
 					{
+						"internalType": "uint40",
+						"name": "deckID",
+						"type": "uint40"
+					}
+				],
+				"name": "isAlreadyBorrowed",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
 						"internalType": "address",
 						"name": "",
 						"type": "address"
@@ -194,7 +213,7 @@
 		"compilationTarget": {
 			"contracts/DecksIndex.sol": "DecksIndex"
 		},
-		"evmVersion": "london",
+		"evmVersion": "berlin",
 		"libraries": {},
 		"metadata": {
 			"bytecodeHash": "ipfs"
@@ -207,11 +226,11 @@
 	},
 	"sources": {
 		"contracts/DecksIndex.sol": {
-			"keccak256": "0x910de03b30a89d899aead0b9182a829872e19bf2a847ddfc9d734d2112e58331",
+			"keccak256": "0x027ec6870df8af6c134f84877e3844a089275056031cde5979efa612be58bf6d",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://b2c5a741f45b55dfdfebf36635592ae758380ea83d122019bb8175380506d938",
-				"dweb:/ipfs/QmQJk3bSjDpJuUZLAyvP1bDkqY4Er3Vzg2gDEMjE9nK27C"
+				"bzz-raw://0ae51d3cf3897e35820b85d01de48c7af35ef3ce6b1f740386e0c37debd8097a",
+				"dweb:/ipfs/QmSf3DMd7HdvLmVDkD8iRJSU49Ey9chv5j5zY8P6ffnvMQ"
 			]
 		},
 		"hardhat/console.sol": {
