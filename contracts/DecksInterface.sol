@@ -2,13 +2,19 @@
 pragma solidity ^0.8.4;
 
 // import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Address.sol";
-import "hardhat/console.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "hardhat/console.sol";
 
 interface ICounter {
     function count() external view returns (uint);
     function increment() external;
 }
+
+error Unauthorized();
+
+error NotEnoughEtherProvided(uint256 requiredAmount, uint256 providedAmount);
+error DeckAlreadyRentedOut(uint32 expiry);
+error CannotRentOwnDeck();
 
 contract DecksInterface {
     //// The business logic below is temporarily written in this one contract
@@ -21,26 +27,25 @@ contract DecksInterface {
 
     struct DeckProperties {
         address owner;
-        uint16 hrPrice;
+        uint8 priceTier;
     }
 
     uint40 public decksCount;
     mapping(uint40 => DeckProperties) public decks;
     mapping(address => uint40[]) public owners;
 
-    function create() external returns (uint40, DeckProperties memory) {
-        uint16 hrPrice = 1;
+    function create(uint8 priceTier) external returns (uint40) {
         uint40 deckID = decksCount++;
         
-        DeckProperties memory deck = DeckProperties(msg.sender, hrPrice);
+        DeckProperties memory deck = DeckProperties(msg.sender, priceTier);
         decks[deckID] = deck;
 
         DeckRentalStatus memory deckRentalStatus = DeckRentalStatus(address(0), 0);
         rentals[deckID] = deckRentalStatus;
-
+ 
         owners[msg.sender].push(deckID);
 
-        return (deckID, deck);
+        return deckID;
     }
 
     //// Contract 2 — RentADeck
@@ -50,41 +55,32 @@ contract DecksInterface {
         uint32 expiry;
     }
 
-    uint constant MICROETH = .000001 * 1000000000000000000;
-    uint32 constant RENT_DURATION = 1 hours;
+    uint32 constant RENT_DURATION = 1 minutes;
 
     mapping(uint40 => DeckRentalStatus) public rentals;
 
-    function rent(uint40 deckID) external payable returns(bool) {
-        // console.log("msg.value", msg.value, "/", decks[deckID].hrPrice);
+    function rent(uint40 deckID) external payable {
+        uint256 price = 2 ** decks[deckID].priceTier;
+        if (msg.value < price) revert NotEnoughEtherProvided(price, msg.value);
 
-        uint256 price = MICROETH * decks[deckID].hrPrice;
-        require(msg.value >= price, "Not enough ETH sent");
-
-        bool success = rentTo(deckID, msg.sender);
-        require(success, "Renting failed");
+        rentTo(deckID, msg.sender);
 
         Address.sendValue(payable(decks[deckID].owner), msg.value);
-        
-        return true;
     }
 
-    function rentTo(uint40 deckID, address renter) public payable returns(bool) {
-        // console.log("msg.value", msg.value, "/", decks[deckID].hrPrice);
+    function rentTo(uint40 deckID, address renter) private {
+        if (decks[deckID].owner == renter) revert CannotRentOwnDeck();
 
-        require(!isRentedOut(deckID), "Deck already rented out");
+        if (isRentedOut(deckID)) revert DeckAlreadyRentedOut(rentals[deckID].expiry);
 
-        DeckRentalStatus memory status = rentals[deckID];
-        status.renter = renter;
-        status.expiry = uint32(block.timestamp + RENT_DURATION);
-        
-        return true;
+        rentals[deckID].renter = renter;
+        rentals[deckID].expiry = uint32(block.timestamp + RENT_DURATION);
     }
 
     function isRentedOut(uint40 deckID) public view returns (bool) {
-        DeckRentalStatus memory status = rentals[deckID];
-        if (status.renter == address(0)) return false;
-        if (status.expiry < block.timestamp) return false;
+        if (rentals[deckID].renter == address(0)) return false;
+        if (rentals[deckID].expiry < block.timestamp) return false;
+
         return true;
     }
 
@@ -93,9 +89,9 @@ contract DecksInterface {
     function canUserUse(uint40 deckID, address user) public view  returns (bool) {
         if (decks[deckID].owner == user) return true;
 
-        DeckRentalStatus memory status = rentals[deckID];
-        if (status.renter != user) return false;
-        if (status.expiry < block.timestamp) return false;
+        if (rentals[deckID].renter != user) return false;
+        if (rentals[deckID].expiry < block.timestamp) return false;
+
         return true;
     }
 
