@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-// import "hardhat/console.sol";
 // import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Address.sol";
+import "hardhat/console.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
 interface ICounter {
@@ -29,10 +29,15 @@ contract DecksInterface {
     mapping(address => uint40[]) public owners;
 
     function create() external returns (uint40, DeckProperties memory) {
+        uint16 hrPrice = 1;
         uint40 deckID = decksCount++;
-        DeckProperties memory deck = DeckProperties(msg.sender, 1, address(0), 0);
-
+        
+        DeckProperties memory deck = DeckProperties(msg.sender, hrPrice);
         decks[deckID] = deck;
+
+        DeckRentalStatus memory deckRentalStatus = DeckRentalStatus(address(0), 0);
+        rentals[deckID] = deckRentalStatus;
+
         owners[msg.sender].push(deckID);
 
         return (deckID, deck);
@@ -69,28 +74,28 @@ contract DecksInterface {
 
         require(!isRentedOut(deckID), "Deck already rented out");
 
-        DeckProperties memory deck = decks[deckID];
-
-        deck.borrower = msg.sender;
-        deck.expiry = uint32(block.timestamp + RENT_DURATION);
+        DeckRentalStatus memory status = rentals[deckID];
+        status.renter = renter;
+        status.expiry = uint32(block.timestamp + RENT_DURATION);
         
         return true;
     }
 
     function isRentedOut(uint40 deckID) public view returns (bool) {
-        DeckProperties memory deck = decks[deckID];
-        if (deck.borrower == address(0)) return false;
-        if (deck.expiry < block.timestamp) return false;
+        DeckRentalStatus memory status = rentals[deckID];
+        if (status.renter == address(0)) return false;
+        if (status.expiry < block.timestamp) return false;
         return true;
     }
 
     //// Contract 3 — DecksInterface
 
     function canUserUse(uint40 deckID, address user) public view  returns (bool) {
-        DeckProperties memory deck = decks[deckID];
-        if (deck.owner == user) return true;
-        if (deck.borrower != user) return false;
-        if (deck.expiry < block.timestamp) return false;
+        if (decks[deckID].owner == user) return true;
+
+        DeckRentalStatus memory status = rentals[deckID];
+        if (status.renter != user) return false;
+        if (status.expiry < block.timestamp) return false;
         return true;
     }
 
