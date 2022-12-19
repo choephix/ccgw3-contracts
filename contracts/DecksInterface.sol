@@ -5,12 +5,6 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/utils/Address.sol";
 import "hardhat/console.sol";
 
-interface ICounter {
-    function count() external view returns (uint256);
-
-    function increment() external;
-}
-
 error Unauthorized();
 
 error NotEnoughEtherProvided(uint256 requiredAmount, uint256 providedAmount);
@@ -71,10 +65,13 @@ contract DecksInterface {
     }
 
     function rentTo(uint40 deckID, address renter) private {
-        if (decks[deckID].owner == renter) revert CannotRentOwnDeck();
+        if (decks[deckID].owner == renter) {
+            revert CannotRentOwnDeck();
+        }
 
-        if (isRentedOut(deckID))
+        if (isRentedOut(deckID)) {
             revert DeckAlreadyRentedOut(rentals[deckID].expiry);
+        }
 
         rentals[deckID].renter = renter;
         rentals[deckID].expiry = uint32(block.timestamp + RENT_DURATION);
@@ -89,7 +86,7 @@ contract DecksInterface {
 
     //// Contract 3 — DecksInterface
 
-    function canUserUse(uint40 deckID, address user)
+    function canUseDeck(uint40 deckID, address user)
         public
         view
         returns (bool)
@@ -100,9 +97,5 @@ contract DecksInterface {
         if (rentals[deckID].expiry < block.timestamp) return false;
 
         return true;
-    }
-
-    function canIUse(uint40 deckID) external view returns (bool) {
-        return canUserUse(deckID, msg.sender);
     }
 }
