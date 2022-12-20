@@ -1,4 +1,7 @@
 {
-  "solidity.defaultCompiler": "localNodeModule",
-  "solidity.packageDefaultDependenciesContractsDirectory": ".deps"
+  "solidity.defaultCompiler": "remote",
+  "solidity.compileUsingRemoteVersion": "latest",
+  "solidity.compileUsingLocalVersion": "c:\\Projects REVOLTAGE\\ccgw3-contracts\\soljson-v0.8.17+commit.8df45f5f.js",
+   "solidity.packageDefaultDependenciesContractsDirectory": "",
+  "solidity.packageDefaultDependenciesDirectory": ""
 }

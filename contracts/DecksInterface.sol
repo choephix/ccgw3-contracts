@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.17;
 
-// import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "hardhat/console.sol";
-
-error Unauthorized();
 
 error NotEnoughEtherProvided(uint256 requiredAmount, uint256 providedAmount);
 error DeckAlreadyRentedOut(uint32 expiry);
 error CannotRentOwnDeck();
 
 contract DecksInterface {
+
     //// The business logic below is temporarily written in this one contract
     //// for simplicity and more comfortable deployment and testing,
     //// but will eventually be split into several contracts
